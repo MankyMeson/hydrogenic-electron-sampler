@@ -78,6 +78,7 @@ program ChargeDensitySampler
     ele_dist(2,i) = theta_sampler(ele_dist_rand(2,i))
     ele_dist(3,i) = phi_sampler(ele_dist_rand(3,i))
   end do
+  deallocate (ele_dist_rand)
 
 ! output
 ! print "(3a20)", "r,", "theta,", "phi "
@@ -88,8 +89,10 @@ program ChargeDensitySampler
 
   allocate (r_dist(n_ele))
   r_dist(:) = ele_dist(1,:)
+  deallocate (ele_dist)
   res = 0.1
   call histogram(r_dist,n_ele,res,r_histogram)
+  deallocate (r_dist)
 
 ! Normalise this
   open (file="histogramdata",unit=8,status="replace")
@@ -98,13 +101,9 @@ program ChargeDensitySampler
     write (8,*) (i-0.5d0)*res, r_histogram(i)
   end do  
   close (8)
-
+  deallocate (r_histogram) ! histogram subroutine allocates r_histogram
 ! r_hist_mode = res * (maxloc(r_histogram))
 ! print *, r_hist_mode
-  deallocate (ele_dist_rand)
-  deallocate (ele_dist)
-  deallocate (r_dist)
-  deallocate (r_histogram) ! histogram subroutine allocates r_histogram
 ! make a histogram to compare to expected distribution
 ! divide r into a grid
 ! xmgrace or matplotlib?
