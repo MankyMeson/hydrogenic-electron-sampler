@@ -10,11 +10,11 @@ contains
     integer :: j
     r = 1.d0
     tolerance = 0.d0000000000000001
-    do j = 1,100
+    do j = 1,10000
       diff = 4*(mode**3)*(r**2)*exp(-2*mode*r)
-      func = 1 - uniform_rand - exp(-2*mode*r)*(2*(mode**2)*(r**2) + 2*mode*r + 1)
+      func = 1.d0 - uniform_rand - exp(-2*mode*r)*(2*(mode**2)*(r**2) + 2*mode*r + 1.d0)
       r_new = r - (func/diff)
-      if (abs(r_new - r) < tolerance) then
+      if (abs(r_new - r) < tolerance.and.j>5) then
         r = r_new
         exit
       else
@@ -30,7 +30,7 @@ contains
     phi_sampler = 2.d0 * pi * uniform_rand
   end function
 
-  real(dp) function theta_sampler(uniform_rand)
+  real(dp) function theta_sampler(uniform_rand) ! Use Cos(theta) for cartesian conversions
     real(dp) :: uniform_rand
     theta_sampler = acos(2.d0 * uniform_rand - 1.d0)
   end function
@@ -43,9 +43,7 @@ contains
     integer :: j, hist_elem, hist_size
     hist_size = ceiling(maxval(dist)/resolution)
     allocate (hist(hist_size))
-    do j = 1,hist_size
-      hist(j) = 0
-    end do
+    hist(:) = 0
     do j = 1,dist_size
       hist_elem = ceiling(dist(j)/resolution)
       hist(hist_elem) = hist(hist_elem) + 1
@@ -60,7 +58,7 @@ program ChargeDensitySampler
   use sampler
   implicit none
   integer :: n_ele, i
-  real(dp) :: bohr_rad, atom_num, res
+  real(dp) :: bohr_rad, atom_num, res, r_hist_mode
   real(dp), dimension(:,:), allocatable :: ele_dist, ele_dist_rand
   real(dp), dimension(:), allocatable :: r_dist
   integer, dimension(:), allocatable :: r_histogram
@@ -68,7 +66,7 @@ program ChargeDensitySampler
 ! assignments
   bohr_rad = 1.d0
   atom_num = 1.d0
-  n_ele = 500000
+  n_ele = 50000
 
   allocate (ele_dist(3,n_ele))! arrays use Fortran ordering. (3,n_ele) would be better.
   allocate (ele_dist_rand(3,n_ele))
@@ -82,26 +80,32 @@ program ChargeDensitySampler
   end do
 
 ! output
-  print "(3a20)", "r,", "theta,", "phi "
-  do i = 1,n_ele
-    print *, i
-    print "(3f20.16)", ele_dist(1,i), ele_dist(2,i), ele_dist(3,i)
-  end do
+! print "(3a20)", "r,", "theta,", "phi "
+! do i = 1,n_ele
+!   print *, i
+!   print "(3f20.16)", ele_dist(1,i), ele_dist(2,i), ele_dist(3,i)
+! end do
 
   allocate (r_dist(n_ele))
-  do i = 1,n_ele
-    r_dist(i) = ele_dist(1,i)
-  end do
+  r_dist(:) = ele_dist(1,:)
   res = 0.1
   call histogram(r_dist,n_ele,res,r_histogram)
 
+! Normalise this
+  open (file="histogramdata",unit=8,status="replace")
   do i = 1,size(r_histogram)
     print "(i6)", r_histogram(i)
+    write (8,*) (i-0.5d0)*res, r_histogram(i)
   end do  
+  close (8)
+
+! r_hist_mode = res * (maxloc(r_histogram))
+! print *, r_hist_mode
   deallocate (ele_dist_rand)
   deallocate (ele_dist)
   deallocate (r_dist)
   deallocate (r_histogram) ! histogram subroutine allocates r_histogram
 ! make a histogram to compare to expected distribution
 ! divide r into a grid
+! xmgrace or matplotlib?
 end program ChargeDensitySampler
