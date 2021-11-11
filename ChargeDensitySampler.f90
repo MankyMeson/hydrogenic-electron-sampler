@@ -30,9 +30,9 @@ contains
     phi_sampler = 2.d0 * pi * uniform_rand
   end function
 
-  real(dp) function theta_sampler(uniform_rand) ! Use Cos(theta) for cartesian conversions
+  real(dp) function cos_theta_sampler(uniform_rand) ! Use Cos(theta) for cartesian conversions
     real(dp) :: uniform_rand
-    theta_sampler = acos(2.d0 * uniform_rand - 1.d0)
+    cos_theta_sampler = 2.d0 * uniform_rand - 1.d0
   end function
 
   subroutine histogram(dist,dist_size,resolution,hist)
@@ -79,7 +79,7 @@ program ChargeDensitySampler
 ! initial electron distribution
   do i = 1,n_ele
     ele_dist(1,i) = r_sampler(atom_num/bohr_rad, ele_dist_rand(1,i))
-    ele_dist(2,i) = theta_sampler(ele_dist_rand(2,i))
+    ele_dist(2,i) = acos(cos_theta_sampler(ele_dist_rand(2,i)))
     ele_dist(3,i) = phi_sampler(ele_dist_rand(3,i))
   end do
   deallocate (ele_dist_rand)
