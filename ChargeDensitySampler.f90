@@ -9,7 +9,7 @@ contains
     real(dp) :: mode, uniform_rand, tolerance, r, r_new, diff, func
     integer :: j
     r = 1.d0
-    tolerance = 0.d0000000000000001
+    tolerance = 1.d-8
     do j = 1,10000
       diff = 4*(mode**3)*(r**2)*exp(-2*mode*r)
       func = 1.d0 - uniform_rand - exp(-2*mode*r)*(2*(mode**2)*(r**2) + 2*mode*r + 1.d0)
@@ -39,34 +39,38 @@ contains
     integer, intent(in) :: dist_size ! size of input distribution
     real(dp), dimension(dist_size), intent(in) :: dist! input distribution (vector), resolution of histogram
     real(dp), intent(in) :: resolution
-    integer, dimension(:), allocatable, intent(out) :: hist ! the histogram itself, a list of integers at each interval
+    integer, dimension(:), allocatable :: hist_count ! the histogram itself, a list of integers at each interval
+    real(dp), dimension(:), allocatable, intent(out) :: hist
     integer :: j, hist_elem, hist_size
     hist_size = ceiling(maxval(dist)/resolution)
-    allocate (hist(hist_size))
-    hist(:) = 0
+    allocate (hist_count(hist_size))
+    hist_count(:) = 0
     do j = 1,dist_size
       hist_elem = ceiling(dist(j)/resolution)
-      hist(hist_elem) = hist(hist_elem) + 1
+      hist_count(hist_elem) = hist_count(hist_elem) + 1
     end do
+    allocate (hist(hist_size))
+    do j = 1,hist_size
+      hist(j) = dble(hist_count(j)) / dist_size
+    end do
+    deallocate (hist_count)
   end subroutine histogram
 
 end module sampler
-
 
 
 program ChargeDensitySampler
   use sampler
   implicit none
   integer :: n_ele, i
-  real(dp) :: bohr_rad, atom_num, res, r_hist_mode
+  real(dp) :: bohr_rad, atom_num, res
   real(dp), dimension(:,:), allocatable :: ele_dist, ele_dist_rand
-  real(dp), dimension(:), allocatable :: r_dist
-  integer, dimension(:), allocatable :: r_histogram
+  real(dp), dimension(:), allocatable :: r_dist, r_histogram
 
 ! assignments
   bohr_rad = 1.d0
   atom_num = 1.d0
-  n_ele = 50000
+  n_ele = 50
 
   allocate (ele_dist(3,n_ele))! arrays use Fortran ordering. (3,n_ele) would be better.
   allocate (ele_dist_rand(3,n_ele))
@@ -95,16 +99,11 @@ program ChargeDensitySampler
   deallocate (r_dist)
 
 ! Normalise this
-  open (file="histogramdata",unit=8,status="replace")
+  open (file="histogramdata.csv",unit=8,status="replace")
   do i = 1,size(r_histogram)
-    print "(i6)", r_histogram(i)
-    write (8,*) (i-0.5d0)*res, r_histogram(i)
+!   print "(f20.16)", r_histogram(i)
+    write (8,"(f20.16,a1,f20.16)") (i-0.5d0)*res,",", r_histogram(i)
   end do  
   close (8)
   deallocate (r_histogram) ! histogram subroutine allocates r_histogram
-! r_hist_mode = res * (maxloc(r_histogram))
-! print *, r_hist_mode
-! make a histogram to compare to expected distribution
-! divide r into a grid
-! xmgrace or matplotlib?
 end program ChargeDensitySampler
