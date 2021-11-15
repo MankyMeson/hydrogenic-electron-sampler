@@ -79,24 +79,19 @@ program ChargeDensitySampler
     ele_dist(2,i) = acos(cos_theta_sampler(ele_dist_rand(2,i)))
     ele_dist(3,i) = phi_sampler(ele_dist_rand(3,i))
   end do
-  deallocate (ele_dist_rand)
 
-! allocate (ele_dist_cart(3,n_ele))
-! do i = 1,n_ele
-!   radius = r_sampler(atom_num/bohr_rad, ele_dist_rand(1,i))
-!   cos_theta = cos_theta_sampler(ele_dist_rand(2,i))
-!   sin_theta = sqrt(1 - cos_theta**2)
-!   phi = phi_sampler(ele_dist_rand(3,i))
-!   ele_dist_cart(1,i) = radius*sin_theta*cos(phi)
-!   ele_dist_cart(2,i) = radius*sin_theta*sin(phi)
-!   ele_dist_cart(3,i) = radius*cos_theta
-! end do
-
-! print "(3a20)", "r,", "theta,", "phi "
-! do i = 1,n_ele
-!   print *, i
+  allocate (ele_dist_cart(3,n_ele))
+  do i = 1,n_ele
+    radius = r_sampler(atom_num/bohr_rad, ele_dist_rand(1,i))
+    cos_theta = cos_theta_sampler(ele_dist_rand(2,i))
+    sin_theta = sqrt(1 - cos_theta**2)
+    phi = phi_sampler(ele_dist_rand(3,i))
+    ele_dist_cart(1,i) = radius*sin_theta*cos(phi)
+    ele_dist_cart(2,i) = radius*sin_theta*sin(phi)
+    ele_dist_cart(3,i) = radius*cos_theta
 !   print "(3f20.16)", ele_dist_cart(1,i), ele_dist_cart(2,i), ele_dist_cart(3,i)
-! end do
+  end do
+  deallocate (ele_dist_rand)
 
   allocate (r_dist(n_ele))
   r_dist(:) = ele_dist(1,:)
