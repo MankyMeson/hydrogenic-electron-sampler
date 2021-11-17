@@ -9,11 +9,12 @@ contains
     integer :: j
     r = 1.d0
     tolerance = 1.d-8
-    do j = 1,10000
+    do ! j = 1,10000
       diff = 4*(mode**3)*(r**2)*exp(-2*mode*r)
       func = 1.d0 - uniform_rand - exp(-2*mode*r)*(2*(mode**2)*(r**2) + 2*mode*r + 1.d0)
       r_new = r - (func/diff)
-      if (abs(r_new - r) < tolerance.and.j>5) then
+!     if (abs(r_new - r) < tolerance.and.j>5) then
+      if (abs(r_new - r) < tolerance) then
         r = r_new
         exit
       else
@@ -68,7 +69,7 @@ program ChargeDensitySampler
 
   bohr_rad = 1.d0
   atom_num = 1.d0
-  n_ele = 500000
+  n_ele = 5000000
 
   allocate (ele_dist(3,n_ele))! arrays use Fortran ordering. (3,n_ele) would be better.
   allocate (ele_dist_rand(3,n_ele))
@@ -96,7 +97,7 @@ program ChargeDensitySampler
   allocate (r_dist(n_ele))
   r_dist(:) = ele_dist(1,:)
   deallocate (ele_dist)
-  res = 0.1
+  res = 0.01
   call histogram(r_dist,n_ele,res,r_histogram) ! histogram subroutine allocates r_histogram
   deallocate (r_dist)
 
